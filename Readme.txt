@@ -2,7 +2,7 @@ this is for appsettings.json:
 
 {
   "ConnectionStrings": {
-    "DefaultConnection": "server=.\\SQLEXPRESS;user=sa;password=password1;Database=ParkingSystemLatihan;TrustServerCertificate=True;"
+    "DefaultConnection": "server=[Your Server];user=[your DB username];password=[your DB password];Database=[DB name];TrustServerCertificate=True;"
   },
   "Logging": {
     "LogLevel": {
