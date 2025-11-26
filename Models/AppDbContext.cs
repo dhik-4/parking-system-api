@@ -15,6 +15,8 @@ public partial class AppDbContext : DbContext
     {
     }
 
+    public virtual DbSet<MemberCard> MemberCards { get; set; }
+
     public virtual DbSet<ParkingFare> ParkingFares { get; set; }
 
     public virtual DbSet<TransactionParking> TransactionParkings { get; set; }
@@ -29,6 +31,22 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<MemberCard>(entity =>
+        {
+            entity.HasKey(e => e.CardId).HasName("PK__MemberCa__55FECD8E5C86892D");
+
+            entity.ToTable("MemberCard");
+
+            entity.Property(e => e.CardId).HasColumnName("CardID");
+            entity.Property(e => e.CardNumber)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Description).HasColumnType("text");
+            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+            entity.Property(e => e.VehicleMasterId).HasColumnName("VehicleMasterID");
+        });
+
         modelBuilder.Entity<ParkingFare>(entity =>
         {
             entity.HasKey(e => e.ParkingFareId).HasName("PK__ParkingF__20620B1A95812BFB");
@@ -48,6 +66,10 @@ public partial class AppDbContext : DbContext
             entity.ToTable("TransactionParking");
 
             entity.Property(e => e.TransactionId).HasColumnName("TransactionID");
+            entity.Property(e => e.CardNumber)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.IsMember).HasColumnName("isMember");
             entity.Property(e => e.PlateNumber)
                 .HasMaxLength(50)
                 .IsUnicode(false);

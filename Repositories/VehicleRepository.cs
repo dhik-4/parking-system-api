@@ -48,12 +48,12 @@ namespace ParkingSystemAPI.Repositories
             bool Result = false;
             try
             {
-                _Context.VehicleMasters.Where(t => t.VehicleMasterId == Id)
+                await _Context.VehicleMasters.Where(t => t.VehicleMasterId == Id)
                     .ExecuteUpdateAsync(s =>
                         s.SetProperty(v => v.VehicleName, Name)
                         .SetProperty(v => v.Code, Code)
                     );
-                await _Context.SaveChangesAsync(cancellationToken);
+                //await _Context.SaveChangesAsync(cancellationToken);
 
                 _Context.ChangeTracker.Clear();
 

@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 
 namespace ParkingSystemAPI.Models;
 
 public partial class TransactionParking
 {
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int TransactionId { get; set; }
 
     public string PlateNumber { get; set; } = null!;
@@ -26,4 +22,8 @@ public partial class TransactionParking
     public byte VehicleMasterId { get; set; }
 
     public decimal? TotalPay { get; set; }
+
+    public string? CardNumber { get; set; }
+
+    public byte? IsMember { get; set; }
 }
