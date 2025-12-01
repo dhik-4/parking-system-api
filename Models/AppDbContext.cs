@@ -55,6 +55,8 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.ParkingFareId).HasColumnName("ParkingFareID");
             entity.Property(e => e.Fare).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.FareSchemeJson).HasColumnType("text");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
             entity.Property(e => e.UnitMasterId).HasColumnName("UnitMasterID");
             entity.Property(e => e.VehicleMasterId).HasColumnName("VehicleMasterID");
         });

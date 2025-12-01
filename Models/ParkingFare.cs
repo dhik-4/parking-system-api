@@ -12,4 +12,8 @@ public partial class ParkingFare
     public byte UnitMasterId { get; set; }
 
     public byte VehicleMasterId { get; set; }
+
+    public string? FareSchemeJson { get; set; }
+
+    public byte? IsActive { get; set; }
 }
