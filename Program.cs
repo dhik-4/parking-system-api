@@ -30,6 +30,7 @@ service.AddDbContext<CustomAppDbContext>(opt => opt.UseSqlServer(koneksiDB,
 
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IFareRepository, FareRepository>();
 
 var app = builder.Build();
 
