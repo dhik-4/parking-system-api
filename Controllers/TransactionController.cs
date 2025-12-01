@@ -17,14 +17,6 @@ namespace ParkingSystemAPI.Controllers
             _repository = repository;
         }
 
-        [HttpGet]
-        [Route("parking/fares")]
-        public async Task<ActionResult<List<ParkingFare_Board>>> GetParkingFares(CancellationToken cancellationToken)
-        {
-            var datas = await _repository.GetParkingFares(cancellationToken);
-            return Ok(datas);
-        }
-
         [HttpPost]
         [Route("parking/enter")]
         public async Task<ActionResult<TransactionParkingEnter_Output>> ParkingEnter([FromBody] TransactionParkingEnter_Input input, CancellationToken cancellationToken)

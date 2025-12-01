@@ -114,12 +114,12 @@ namespace ParkingSystemAPI.Repositories
                             totalPay = parkingData.Tariff * Math.Ceiling(Convert.ToDecimal( diffHour) );
                         }
 
-                        _Context.TransactionParkings.Where(t => t.TransactionId == parkingData.TransactionId)
+                        await _Context.TransactionParkings.Where(t => t.TransactionId == parkingData.TransactionId)
                             .ExecuteUpdateAsync(s =>
                                 s.SetProperty(s1 => s1.TimeOut, _timeOut)
                                 .SetProperty(s2 => s2.TotalPay, totalPay)
                             );
-                        await _Context.SaveChangesAsync(cancellationToken);
+                        //await _Context.SaveChangesAsync(cancellationToken);
 
                         _Context.ChangeTracker.Clear();
 
