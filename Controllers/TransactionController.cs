@@ -24,6 +24,20 @@ namespace ParkingSystemAPI.Controllers
             var datas = await _repository.ParkingEnter(input, cancellationToken);
             return Ok(datas);
         }
+
+        [HttpGet]
+        [Route("parking/payment")]
+        public async Task<ActionResult<List<TransactionParking_Trx>>> ParkingPaymentCheck(string PlateNumber, string RefNumber, CancellationToken cancellationToken)
+        {
+            TransactionParkingExit_Input input = new TransactionParkingExit_Input()
+            {
+                PlateNumber = PlateNumber,
+                RefNumber = RefNumber
+            };
+            var datas = await _repository.ParkingPaymentCheck(input, cancellationToken);
+            return Ok(datas);
+        }
+
         [HttpPut]
         [Route("parking/exit")]
         public async Task<ActionResult<TransactionParkingExit_Output>> ParkingExit([FromBody] TransactionParkingExit_Input input, CancellationToken cancellationToken)
