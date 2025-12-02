@@ -26,4 +26,6 @@ public partial class TransactionParking
     public string? CardNumber { get; set; }
 
     public byte? IsMember { get; set; }
+
+    public int? ParkingFareId { get; set; }
 }

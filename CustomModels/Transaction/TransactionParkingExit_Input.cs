@@ -6,5 +6,6 @@
 
         public string RefNumber { get; set; }
 
+        public DateTime? TimeOut { get; set; }
     }
 }
