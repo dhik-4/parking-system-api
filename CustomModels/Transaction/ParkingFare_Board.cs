@@ -1,4 +1,5 @@
 ﻿using ParkingSystemAPI.CustomModels.Fare;
+using System.Text.Json.Serialization;
 
 namespace ParkingSystemAPI.CustomModels.Transaction
 {
@@ -10,6 +11,7 @@ namespace ParkingSystemAPI.CustomModels.Transaction
         public decimal Fare {  get; set; }
         //public string Unit { get; set; }
 
+        [JsonIgnore]
         public string? FareSchemeJson { get; set; }
         public byte? IsActive { get; set; }
 
