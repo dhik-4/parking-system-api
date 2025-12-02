@@ -8,5 +8,6 @@ namespace ParkingSystemAPI.Interfaces
         Task<TransactionParkingExit_Output> ParkingExit(TransactionParkingExit_Input input, CancellationToken cancellationToken);
         Task<List<TransactionParking_Trx>> GetParkingData(string PlateNumber, string RefNumber, string TimeIn, string TimeOut,
             string VehicleName, CancellationToken cancellationToken);
+        Task<TransactionParkingExit_Output> ParkingPaymentCheck(TransactionParkingExit_Input input, CancellationToken cancellationToken);
     }
 }

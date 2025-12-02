@@ -1,11 +1,13 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ParkingSystemAPI.CustomModels;
+using ParkingSystemAPI.CustomModels.Fare;
 using ParkingSystemAPI.CustomModels.Transaction;
 using ParkingSystemAPI.Interfaces;
 using ParkingSystemAPI.Models;
 using System;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading;
 using System.Timers;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -49,20 +51,21 @@ namespace ParkingSystemAPI.Repositories
 
             try
             {
-                var vehicleData = await _Context.VehicleMasters.FirstOrDefaultAsync(v => v.Code == input.VehicleCode);
-                if (vehicleData != null)
+                var _vehicleMaster = await _Context.VehicleMasters.FirstOrDefaultAsync(v => v.Code == input.VehicleCode);
+                if (_vehicleMaster != null)
                 {
                     var parkingFare = await _Context.ParkingFares
-                        .FirstOrDefaultAsync(p => p.UnitMasterId == data.UnitMasterId && p.VehicleMasterId == vehicleData.VehicleMasterId);
+                        .FirstOrDefaultAsync(p => p.IsActive == 1 && p.VehicleMasterId == _vehicleMaster.VehicleMasterId);
                     if (parkingFare != null)
                     {
-                        string refNumber = vehicleData.Code + DateTime.Now.ToString("yyyyMMddHHmmss");
+                        string refNumber = _vehicleMaster.Code + DateTime.Now.ToString("yyyyMMddHHmmss");
                         data.RefNumber = refNumber;
 
                         data.TimeIn = DateTime.Now;
-                        data.VehicleMasterId = vehicleData.VehicleMasterId;
-                        //data.UnitMasterId
-                        data.Tariff = parkingFare.Fare;
+                        data.VehicleMasterId = _vehicleMaster.VehicleMasterId;
+                        data.Tariff = 0;
+                        data.IsMember = 0; // membership temporarily not available
+                        data.ParkingFareId = parkingFare.ParkingFareId;
 
                         _Context.TransactionParkings.Add(data);
                         await _Context.SaveChangesAsync(cancellationToken);
@@ -71,7 +74,7 @@ namespace ParkingSystemAPI.Repositories
 
                         Result.RefNumber = refNumber;
                         Result.TimeIn = data.TimeIn;
-                        Result.Vehicle = vehicleData.VehicleName;
+                        Result.Vehicle = _vehicleMaster.VehicleName;
                         Result.PlateNumber = data.PlateNumber;
                     }
                 }
@@ -95,23 +98,36 @@ namespace ParkingSystemAPI.Repositories
                         .FirstOrDefaultAsync(p => p.PlateNumber == input.PlateNumber && p.RefNumber == input.RefNumber);
                 if (parkingData != null)
                 {
-                    var vehicleData = await _Context.VehicleMasters.FirstOrDefaultAsync(v => v.VehicleMasterId == parkingData.VehicleMasterId);
-                    if (vehicleData != null)
+                    var parkingFareData = await _Context.ParkingFares.FirstOrDefaultAsync(v => v.ParkingFareId == parkingData.ParkingFareId);
+                    if (parkingFareData != null && !string.IsNullOrWhiteSpace(parkingFareData.FareSchemeJson))
                     {
-                        DateTime _timeOut = DateTime.Now;
+                        DateTime _timeOut = input.TimeOut ?? DateTime.Now;
                         decimal totalPay = 0;
-                        if(parkingData.UnitMasterId == 1)
-                        {
-                            TimeSpan _duration = _timeOut - parkingData.TimeIn;
-                            double diffHour = _duration.TotalHours;
-                            double diffMinute = _duration.Minutes;
-                            Result.Duration = Math.Floor(diffHour) + " hour(s) " + Math.Floor(diffMinute) + " minute(s)";
-                            if (_duration.TotalHours >= 24)
-                            {
-                                Result.Duration = _duration.TotalDays + " day(s) " + Result.Duration;
-                            }
+                        TimeSpan _duration = _timeOut - parkingData.TimeIn;
+                        double diffHour = _duration.TotalHours;
+                        double diffMinute = _duration.Minutes;
 
-                            totalPay = parkingData.Tariff * Math.Ceiling(Convert.ToDecimal( diffHour) );
+
+                        List<FareScheme> _fareSchemes = JsonSerializer.Deserialize<List<FareScheme>>(parkingFareData.FareSchemeJson);
+                        for (int i = 0; i < _fareSchemes.Count; i++)
+                        {
+                            double hrPerScheme = diffHour / _fareSchemes[i].UnitHour;
+                            if (_fareSchemes[i].MaxScheme > 0 && hrPerScheme > _fareSchemes[i].MaxScheme)
+                            {
+                                totalPay += _fareSchemes[i].MaxScheme * _fareSchemes[i].Fare;
+                                diffHour -= _fareSchemes[i].MaxScheme * _fareSchemes[i].UnitHour;
+                            }
+                            else
+                            {
+                                totalPay += Math.Ceiling(Convert.ToDecimal(hrPerScheme)) * _fareSchemes[i].Fare;
+                                break;
+                            }
+                        }
+
+                        Result.Duration = _duration.Hours + " hour(s) " + _duration.Minutes + " minute(s)";
+                        if (_duration.Days >= 1)
+                        {
+                            Result.Duration = _duration.Days + " day(s) " + Result.Duration;
                         }
 
                         await _Context.TransactionParkings.Where(t => t.TransactionId == parkingData.TransactionId)
@@ -126,12 +142,73 @@ namespace ParkingSystemAPI.Repositories
                         Result.RefNumber = parkingData.RefNumber;
                         Result.TimeIn = parkingData.TimeIn;
                         Result.TimeOut = _timeOut;
-                        Result.Vehicle = vehicleData.VehicleName;
+                        Result.Vehicle = _Context.VehicleMasters.Where(v => v.VehicleMasterId == parkingFareData.VehicleMasterId).Select(v => v.VehicleName).FirstOrDefault();
                         Result.PlateNumber = parkingData.PlateNumber;
                         Result.TotalPay = totalPay;
                     }
                 }
 
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return Result;
+        }
+
+        public async Task<TransactionParkingExit_Output> ParkingPaymentCheck(TransactionParkingExit_Input input, CancellationToken cancellationToken)
+        {
+            TransactionParkingExit_Output Result = new TransactionParkingExit_Output();
+
+            try
+            {
+                var parkingData = await _Context.TransactionParkings
+                        .FirstOrDefaultAsync(p => p.PlateNumber == input.PlateNumber && p.RefNumber == input.RefNumber);
+                if (parkingData != null)
+                {
+                    var parkingFareData = await _Context.ParkingFares.FirstOrDefaultAsync(v => v.ParkingFareId == parkingData.ParkingFareId);
+                    if (parkingFareData != null && !string.IsNullOrWhiteSpace(parkingFareData.FareSchemeJson) )
+                    {
+                        DateTime _timeOut = DateTime.Now;
+                        decimal totalPay = 0;
+                        TimeSpan _duration = _timeOut - parkingData.TimeIn;
+                        double diffHour = _duration.TotalHours;
+                        double diffMinute = _duration.Minutes;
+
+
+                        List<FareScheme> _fareSchemes = JsonSerializer.Deserialize<List<FareScheme>>(parkingFareData.FareSchemeJson);
+                        for (int i = 0; i < _fareSchemes.Count; i++)
+                        {
+                            double hrPerScheme = diffHour / _fareSchemes[i].UnitHour;
+                            if (_fareSchemes[i].MaxScheme > 0 && hrPerScheme > _fareSchemes[i].MaxScheme)
+                            {
+                                totalPay += _fareSchemes[i].MaxScheme * _fareSchemes[i].Fare;
+                                diffHour -= _fareSchemes[i].MaxScheme * _fareSchemes[i].UnitHour;
+                            }
+                            else
+                            {
+                                totalPay += Math.Ceiling(Convert.ToDecimal(hrPerScheme)) * _fareSchemes[i].Fare;
+                                break;
+                            }
+                        }
+
+                        Result.Duration = _duration.Hours + " hour(s) " + _duration.Minutes + " minute(s)";
+                        if (_duration.Days >= 1)
+                        {
+                            Result.Duration = _duration.Days + " day(s) " + Result.Duration;
+                        }
+
+
+                        _Context.ChangeTracker.Clear();
+
+                        Result.RefNumber = parkingData.RefNumber;
+                        Result.TimeIn = parkingData.TimeIn;
+                        Result.TimeOut = _timeOut;
+                        Result.Vehicle = _Context.VehicleMasters.Where(v => v.VehicleMasterId == parkingFareData.VehicleMasterId).Select(v => v.VehicleName).FirstOrDefault();
+                        Result.PlateNumber = parkingData.PlateNumber;
+                        Result.TotalPay = totalPay;
+                    }
+                }
             }
             catch (Exception ex)
             {
