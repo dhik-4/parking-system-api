@@ -52,7 +52,7 @@ namespace ParkingSystemAPI.Repositories
             try
             {
                 var _vehicleMaster = await _Context.VehicleMasters.FirstOrDefaultAsync(v => v.Code == input.VehicleCode);
-                if (_vehicleMaster != null)
+                if (_vehicleMaster is not null)
                 {
                     var parkingFare = await _Context.ParkingFares
                         .FirstOrDefaultAsync(p => p.IsActive == 1 && p.VehicleMasterId == _vehicleMaster.VehicleMasterId);
@@ -96,10 +96,10 @@ namespace ParkingSystemAPI.Repositories
             {
                 var parkingData = await _Context.TransactionParkings
                         .FirstOrDefaultAsync(p => p.PlateNumber == input.PlateNumber && p.RefNumber == input.RefNumber);
-                if (parkingData != null)
+                if (parkingData is not null)
                 {
                     var parkingFareData = await _Context.ParkingFares.FirstOrDefaultAsync(v => v.ParkingFareId == parkingData.ParkingFareId);
-                    if (parkingFareData != null && !string.IsNullOrWhiteSpace(parkingFareData.FareSchemeJson))
+                    if (parkingFareData is not null && !string.IsNullOrWhiteSpace(parkingFareData.FareSchemeJson))
                     {
                         DateTime _timeOut = input.TimeOut ?? DateTime.Now;
                         decimal totalPay = 0;
@@ -164,10 +164,10 @@ namespace ParkingSystemAPI.Repositories
             {
                 var parkingData = await _Context.TransactionParkings
                         .FirstOrDefaultAsync(p => p.PlateNumber == input.PlateNumber && p.RefNumber == input.RefNumber);
-                if (parkingData != null)
+                if (parkingData is not null)
                 {
                     var parkingFareData = await _Context.ParkingFares.FirstOrDefaultAsync(v => v.ParkingFareId == parkingData.ParkingFareId);
-                    if (parkingFareData != null && !string.IsNullOrWhiteSpace(parkingFareData.FareSchemeJson) )
+                    if (parkingFareData is not null && !string.IsNullOrWhiteSpace(parkingFareData.FareSchemeJson) )
                     {
                         DateTime _timeOut = DateTime.Now;
                         decimal totalPay = 0;
