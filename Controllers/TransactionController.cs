@@ -48,10 +48,17 @@ namespace ParkingSystemAPI.Controllers
 
         [HttpGet]
         [Route("parking/data")]
-        public async Task<ActionResult<List<TransactionParking_Trx>>> GetParkingData(string? PlateNumber, string? RefNumber, string? TimeIn,
-            string? TimeOut, string? VehicleName, CancellationToken cancellationToken)
+        public async Task<ActionResult<List<TransactionParking_Trx>>> GetParkingData(string? PlateNumber, string? RefNumber,
+            string? TimeInFrom, string? TimeInTo,
+            string? TimeOutFrom, string? TimeOutTo, string? VehicleName, CancellationToken cancellationToken)
         {
-            var datas = await _repository.GetParkingData( PlateNumber, RefNumber, TimeIn, TimeOut,
+            DateTime? _inFrom = TimeInFrom is not null ? DateTime.Parse(TimeInFrom) : null;
+            DateTime? _inTo = TimeInTo is not null ? DateTime.Parse(TimeInTo) : null;
+            DateTime? _outFrom = TimeOutFrom is not null ? DateTime.Parse(TimeOutFrom) : null;
+            DateTime? _outTo = TimeInTo is not null ? DateTime.Parse(TimeInTo) : null;
+
+            var datas = await _repository.GetParkingData( PlateNumber, RefNumber, _inFrom, _inTo,
+                _outFrom, _outTo,
              VehicleName, cancellationToken);
             return Ok(datas);
         }
