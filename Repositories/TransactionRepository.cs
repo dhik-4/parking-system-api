@@ -217,7 +217,81 @@ namespace ParkingSystemAPI.Repositories
             return Result;
         }
 
-        public async Task<List<TransactionParking_Trx>> GetParkingData(string PlateNumber, string RefNumber, string TimeIn, string TimeOut,
+        public async Task<List<TransactionParking_Trx>> GetParkingData(string PlateNumber, string RefNumber,
+            DateTime? TimeInFrom, DateTime? TimeInTo,
+            DateTime? TimeOutFrom, DateTime? TimeOutTo,
+            string VehicleName, CancellationToken cancellationToken)
+        {
+            List<TransactionParking_Trx> result = new List<TransactionParking_Trx>();
+
+            try
+            {
+                IQueryable<(TransactionParking a, VehicleMaster? b)> queryTemp =
+                        from a in _Context.TransactionParkings
+                        join b in _Context.VehicleMasters
+                            on a.VehicleMasterId equals b.VehicleMasterId into ab
+                        from b in ab.DefaultIfEmpty()
+                        where 
+                        (string.IsNullOrWhiteSpace(VehicleName) || b.VehicleName == VehicleName)
+                        && (string.IsNullOrWhiteSpace(RefNumber) || a.RefNumber == RefNumber)
+                        select new ValueTuple<TransactionParking, VehicleMaster?>(a, b);
+
+                //var resultTemp2 = (from a in _Context.TransactionParkings
+                //                   join b in _Context.VehicleMasters
+                //                       on a.VehicleMasterId equals b.VehicleMasterId into ab
+                //                   from b in ab.DefaultIfEmpty()
+                //                   where b == null || b.VehicleName == VehicleName).AsQueryable();
+
+                //var resultTemp = _Context.TransactionParkings.AsQueryable();
+                //if (PlateNumber is not null)
+                //    queryTemp = queryTemp.Where(p => p.a.PlateNumber == PlateNumber);
+                //resultTemp = resultTemp.Where(p => p.PlateNumber == PlateNumber);
+                //if (RefNumber is not null)
+                //    queryTemp = queryTemp.Where(p => p.a.RefNumber == RefNumber);
+                //resultTemp = resultTemp.Where(r => r.RefNumber == RefNumber);
+
+                if (TimeInFrom is not null && TimeInTo is not null && TimeInFrom <= TimeInTo)
+                    queryTemp = queryTemp.Where(p => p.a.TimeIn >= TimeInFrom && p.a.TimeIn <= TimeInTo);
+                //resultTemp = resultTemp.Where(t => t.TimeIn >= TimeInFrom && t.TimeIn <= TimeInTo);
+
+                if (TimeOutFrom is not null && TimeOutTo is not null && TimeOutFrom <= TimeOutTo)
+                    queryTemp = queryTemp.Where(p => p.a.TimeOut >= TimeOutFrom && p.a.TimeOut <= TimeOutTo);
+                //resultTemp = resultTemp.Where(t => t.TimeOut >= TimeOutFrom && t.TimeOut <= TimeOutTo);
+
+                if (VehicleName is not null)
+                {
+                    var vehicleMasterID = _Context.VehicleMasters.Where(v => v.VehicleName == VehicleName)
+                                                        .Select(v => v.VehicleMasterId)
+                                                        .FirstOrDefault();
+                    queryTemp = queryTemp.Where(r => r.a.VehicleMasterId == vehicleMasterID);
+                }
+
+                //queryTemp = queryTemp.Select(x => new TransactionParking_Trx
+                //{
+                //    PlateNumber = x.a.PlateNumber,
+                //    RefNumber = x.a.RefNumber,
+                //    TimeIn = x.a.TimeIn,
+                //    TimeOut = x.a.TimeOut,
+                //    VehicleName = x.b.VehicleName
+                //});
+
+                result = await queryTemp.Select(x => new TransactionParking_Trx
+                {
+                    PlateNumber = x.a.PlateNumber,
+                    RefNumber = x.a.RefNumber,
+                    TimeIn = x.a.TimeIn,
+                    TimeOut = x.a.TimeOut,
+                    VehicleName = x.b.VehicleName
+                }).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return result;
+        }
+
+        public async Task<List<TransactionParking_Trx>> GetParkingData_fromSP(string PlateNumber, string RefNumber, string TimeIn, string TimeOut,
             string VehicleName, CancellationToken cancellationToken)
         {
             var parameters = new[]
