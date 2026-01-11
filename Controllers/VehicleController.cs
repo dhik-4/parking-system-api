@@ -15,20 +15,18 @@ namespace ParkingSystemAPI.Controllers
 
         public VehicleController(IVehicleRepository repository)
         {
-            //_context = context;
-            //_CustomContext = CustomContext;
             _repository = repository;
         }
 
-        [HttpGet]
+        /*[HttpGet]
         //[Route("parkingfares")]
         public async Task<ActionResult<List<VehicleMaster>>> GetVehicleList(CancellationToken cancellationToken)
         {
             var datas = await _repository.GetVehicleList(cancellationToken);
             return Ok(datas);
-        }
+        }*/
 
-        [HttpPost]
+        /*[HttpPost]
         public async Task<ActionResult<bool>> AddVehicle([FromBody] VehicleMaster_Input data, CancellationToken cancellationToken)
         {
             VehicleMaster master = new VehicleMaster()
@@ -39,7 +37,7 @@ namespace ParkingSystemAPI.Controllers
 
             var datas = await _repository.AddVehicle(master, cancellationToken);
             return Ok(datas);
-        }
+        }*/
 
         [HttpPut]
         [Route("{Id}")]

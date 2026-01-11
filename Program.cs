@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ParkingSystemAPI.CustomModels;
+using ParkingSystemAPI.Endpoints;
 using ParkingSystemAPI.Interfaces;
 using ParkingSystemAPI.Models;
 using ParkingSystemAPI.Repositories;
@@ -46,6 +47,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapVehicleEndpoints();
 
 app.Run();
 
